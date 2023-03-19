@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Object Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #212529;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, .25)
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem
+        }
+
+        .form-control-file {
+            padding: .375rem .75rem;
+            border-color: #ced4da;
+            font-size: 1rem;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1)
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: .75rem 1.5rem;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1)
+        }
+
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .25)
+        }
+
+        #output-image {
+            margin-top: 1.5rem;
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1)
+        }
+
+        #detection-results {
+            margin-top: 1.5rem;
+            font-size: .875rem;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1)
+        }
+
+        #detection-results-header th {
+            font-weight: bold;
+            color: #fff;
+            background-color: #212529;
+            padding: .5rem
+        }
+
+        #detection-results tr {
+            background-color: #f8f9fa
+        }
+
+        #detection-results tr:nth-child(even) {
+            background-color: #e2e6ea
+        }
+
+        #detection-results td {
+            vertical-align: middle;
+            padding: .5rem
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            $('#upload-form').submit(function (event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+                $('#upload-form button[type="submit"]').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...').prop('disabled', true);
+                $.ajax({
+                    url: '/detect',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $('#detection-results').empty();
+                        $('#detection-results').append('<thead id="detection-results-header" class="thead-dark"><tr><th>Label</th><th>Score</th><th>Coordinates</th></tr></thead>');
+                        for (var i = 0; i < response.labels.length; i++) {
+                            var label = response.labels[i];
+                            var score = response.scores[i];
+                            var box = response.boxes[i];
+                            var coords = '(' + box[0] + ', ' + box[1] + ', ' + box[2] + ', ' + box[3] + ')';
+                            $('#detection-results').append('<tr><td>' + label + '</td><td>' + score.toFixed(3) + '</td><td>' + coords + '</td></tr>')
+                        }
+                        var outputImageUrl = '/static/' + response.image_filename;
+                        $('#output-image').attr('src', outputImageUrl);
+                        $('#output-image').addClass('animate__animated animate__fadeIn');
+                        $('#detection-results').addClass('animate__animated animate__fadeInUp')
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Error: ' + error)
+                    },
+                    complete: function () {
+                        $('#upload-form button[type="submit"]').html('Detect Objects').prop('disabled', false);
+                    }
+                })
+            })
+        });
+    </script>
+</head>
+
+<body>
+<div class="container-fluid">
+    <div class="row mt-3">
+        <div class="col-sm mx-auto">
+            <h1 class="text-center">Object Detection</h1>
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="file" class="form-control-file border" name="image" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Detect Objects</button>
+            </form>
+            <hr>
+            <div class="row justify-content-center">
+                <div class="col-sm-8">
+                    <table id="detection-results" class="table table-bordered">
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-sm-8 text-center"><img id="output-image" class="img-fluid"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

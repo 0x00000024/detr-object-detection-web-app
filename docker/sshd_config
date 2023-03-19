@@ -1,0 +1,13 @@
+# This is the sshd server system-wide configuration file.
+
+# Specify the port number that sshd listens on.
+Port 22
+
+# Specify whether root can log in using ssh.
+PermitRootLogin yes
+
+# Specifies whether X11 forwarding is permitted.
+X11Forwarding yes
+
+# Configures an external subsystem (e.g. file transfer daemon).
+Subsystem sftp /usr/lib/openssh/sftp-server

@@ -1,0 +1,38 @@
+# Define the services that will be deployed by Docker Compose
+services:
+  detr-object-detection-web-app:
+    # Set the name of the container to the value of the PROJECT_NAME environment variable
+    container_name: "${PROJECT_NAME}"
+    # Allocate a TTY for the container
+    tty: true
+    # Enable privileged mode for the container
+    privileged: true
+
+    # Build the container using the following arguments
+    build:
+      context: .
+      args:
+        ROOT_PASSWORD: "${ROOT_PASSWORD}"
+        PUBLIC_KEY: "${PUBLIC_KEY}"
+        CONDA_VERSION: "${CONDA_VERSION}"
+        PROJECT_NAME: "${PROJECT_NAME}"
+        PYTHON_VERSION: "${PYTHON_VERSION}"
+
+    # Set to nvidia to enable GPU support
+    runtime: nvidia
+
+    # Map the specified devices to the container's devices
+    devices:
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+
+    # Map the specified ports to the container's ports
+    ports:
+      - "${SSH_PORT}:22"
+      - "${FLASK_PORT}:5000"
+      - "${XRDP_PORT}:3389"
+
+    # Set the XDG_RUNTIME_DIR environment variable
+    environment:
+      XDG_RUNTIME_DIR: "/tmp"
